@@ -1,0 +1,19 @@
+# Environment variables
+.env
+backend/.env
+
+# Python virtual environment
+backend/venv/
+
+# Uploaded audio files
+backend/uploaded_audio/
+
+# Python cache
+**/__pycache__/
+**/*.pyc
+
+# Node modules
+frontend/nextjs-app/node_modules/
+
+# Next.js build output
+frontend/nextjs-app/.next/
