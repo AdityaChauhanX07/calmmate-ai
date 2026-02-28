@@ -33,11 +33,20 @@ export default function SignUp() {
     }
 
     // Auto sign in after register
-    await signIn("credentials", {
+    const result = await signIn("credentials", {
       email,
       password,
-      callbackUrl: "/",
+      redirect: false,
     });
+
+    setLoading(false);
+
+    if (result?.error) {
+      setError("Account created but sign in failed. Please sign in manually.");
+    } else {
+      router.push("/");
+      router.refresh();
+    }
   };
 
   const handleGoogle = () => {
