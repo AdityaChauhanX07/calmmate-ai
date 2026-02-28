@@ -1,6 +1,6 @@
 # CalmMate AI
 
-A voice-based mental wellness app I built to experiment with combining several AI APIs into something actually useful. You speak, it listens, figures out how you're feeling, and responds like a therapist — with voice.
+A voice-based mental wellness app I built to experiment with combining several AI APIs into something actually useful. You speak, it listens, figures out how you're feeling, and responds like a therapist with voice.
 
 ## What it does
 
@@ -15,7 +15,7 @@ Record yourself talking about whatever's on your mind. The app transcribes it, d
 
 ## Getting it running locally
 
-You'll need API keys for Groq, ElevenLabs, and either set up a Supabase project or use your own Postgres instance.
+You'll need API keys for Groq, ElevenLabs, and either a Supabase project or your own Postgres instance.
 
 ### Backend
 ```bash
@@ -29,7 +29,6 @@ Create `backend/.env`:
 ```
 GROQ_API_KEY=your_key
 ELEVENLABS_API_KEY=your_key
-OPENAI_API_KEY=your_key  # optional, not currently used
 ```
 ```bash
 uvicorn app.main:app --reload
@@ -60,7 +59,7 @@ Open `http://localhost:3000`.
 
 ## Known issues / TODO
 
-- Audio files aren't cleaned up automatically from the server yet — they accumulate in `uploaded_audio/`
+- Audio files are not cleaned up automatically from the server yet, they accumulate in `uploaded_audio/`
 - The emotion model sometimes misclassifies short or ambiguous speech
 - No mobile app yet, just browser
 - Deployment docs are still WIP
@@ -69,15 +68,15 @@ Open `http://localhost:3000`.
 
 1. Browser records audio via MediaRecorder API
 2. Audio blob uploaded to FastAPI backend
-3. ffmpeg converts webm → wav
+3. ffmpeg converts webm to wav
 4. Groq Whisper transcribes the audio
-5. DistilRoBERTa classifies emotion from transcript
+5. DistilRoBERTa classifies emotion from the transcript
 6. LLaMA 3.3 70B generates a therapist response
-7. ElevenLabs converts response to speech
-8. Frontend plays the audio back and saves session to DB
+7. ElevenLabs converts the response to speech
+8. Frontend plays the audio back and saves the session to the database
 
 ## Notes
 
-The emotion detection is text-based, not audio-based — it analyzes what you said, not how you said it (tone, pitch etc.). That's a meaningful limitation worth knowing about. True prosody analysis would require a different model architecture.
+The emotion detection is text-based, not audio-based. It analyzes what you said, not how you said it (tone, pitch, etc.). That is a meaningful limitation worth knowing about. True prosody analysis would need a different model architecture.
 
-Built this mostly to learn FastAPI + Next.js together and see how well these AI APIs play with each other. Turns out pretty well.
+Built this mostly to learn FastAPI and Next.js together and see how well these AI APIs play with each other. Turns out pretty well.
