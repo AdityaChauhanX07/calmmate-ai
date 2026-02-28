@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Recorder from "../components/Recorder";
 import Waveform from "../components/Waveform";
 
@@ -64,6 +65,23 @@ export default function Home() {
     setAppState("error");
   };
 
+  const saveSession = async (data: {
+    transcript: string;
+    emotion: string;
+    confidence: number;
+    reply: string;
+  }) => {
+    try {
+      await fetch("/api/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+    } catch {
+      console.error("Failed to save session history");
+    }
+  };
+
   const requestVoiceReply = async (text: string) => {
     setAppState("speaking");
     const res = await fetch(`${API_BASE}/speak`, {
@@ -90,6 +108,13 @@ export default function Home() {
     setEmotion(data.emotion);
     setConfidence(data.confidence);
     setAiReply(data.reply);
+    // Save session in background — non-blocking, failure is non-fatal
+    saveSession({
+      transcript: data.transcript,
+      emotion: data.emotion,
+      confidence: data.confidence,
+      reply: data.reply,
+    });
     await requestVoiceReply(data.reply);
   };
 
@@ -131,12 +156,20 @@ export default function Home() {
           <h1 className="text-5xl font-extrabold text-white">
             CalmMate <span className="text-blue-400">AI</span>
           </h1>
-          <button
-            onClick={() => signOut({ callbackUrl: "/auth/signin" })}
-            className="text-gray-500 hover:text-white text-sm transition"
-          >
-            Sign out
-          </button>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/history"
+              className="text-gray-400 hover:text-blue-300 text-sm transition-colors"
+            >
+              View History
+            </Link>
+            <button
+              onClick={() => signOut({ callbackUrl: "/auth/signin" })}
+              className="text-gray-500 hover:text-white text-sm transition"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
 
         <p className="text-gray-400 text-sm mb-1">
