@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(git filter-repo:)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(ping:*)",
+      "Bash(kill 1929:*)",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "Bash(tasklist:*)"
     ]
   }
 }
