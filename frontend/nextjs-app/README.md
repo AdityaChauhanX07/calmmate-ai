@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CalmMate AI
 
-## Getting Started
+A voice-based mental wellness app I built to experiment with combining several AI APIs into something actually useful. You speak, it listens, figures out how you're feeling, and responds like a therapist — with voice.
 
-First, run the development server:
+## What it does
 
+Record yourself talking about whatever's on your mind. The app transcribes it, detects your emotional state, generates a therapist-style response, and reads it back to you. It also tracks your emotional patterns over time so you can see trends.
+
+## Stack
+
+**Frontend:** Next.js 14, TypeScript, Tailwind CSS, NextAuth.js  
+**Backend:** Python, FastAPI  
+**AI/ML:** Groq Whisper (transcription), DistilRoBERTa (emotion detection), LLaMA 3.3 70B via Groq (therapist responses), ElevenLabs (text-to-speech)  
+**Database:** PostgreSQL via Supabase, Prisma ORM
+
+## Getting it running locally
+
+You'll need API keys for Groq, ElevenLabs, and either set up a Supabase project or use your own Postgres instance.
+
+### Backend
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd backend
+python -m venv venv
+venv\Scripts\activate  # Windows
+pip install -r requirements.txt
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create `backend/.env`:
+```
+GROQ_API_KEY=your_key
+ELEVENLABS_API_KEY=your_key
+OPENAI_API_KEY=your_key  # optional, not currently used
+```
+```bash
+uvicorn app.main:app --reload
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Frontend
+```bash
+cd frontend/nextjs-app
+npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create `frontend/nextjs-app/.env.local`:
+```
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=generate_a_random_string
+GOOGLE_CLIENT_ID=your_google_oauth_client_id
+GOOGLE_CLIENT_SECRET=your_google_oauth_secret
+DATABASE_URL=your_postgres_connection_string
+```
+```bash
+npx prisma db push
+npx prisma generate
+npm run dev
+```
 
-## Learn More
+Open `http://localhost:3000`.
 
-To learn more about Next.js, take a look at the following resources:
+## Known issues / TODO
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Audio files aren't cleaned up automatically from the server yet — they accumulate in `uploaded_audio/`
+- The emotion model sometimes misclassifies short or ambiguous speech
+- No mobile app yet, just browser
+- Deployment docs are still WIP
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## How the pipeline works
 
-## Deploy on Vercel
+1. Browser records audio via MediaRecorder API
+2. Audio blob uploaded to FastAPI backend
+3. ffmpeg converts webm → wav
+4. Groq Whisper transcribes the audio
+5. DistilRoBERTa classifies emotion from transcript
+6. LLaMA 3.3 70B generates a therapist response
+7. ElevenLabs converts response to speech
+8. Frontend plays the audio back and saves session to DB
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Notes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The emotion detection is text-based, not audio-based — it analyzes what you said, not how you said it (tone, pitch etc.). That's a meaningful limitation worth knowing about. True prosody analysis would require a different model architecture.
+
+Built this mostly to learn FastAPI + Next.js together and see how well these AI APIs play with each other. Turns out pretty well.
