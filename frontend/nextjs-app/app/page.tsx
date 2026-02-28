@@ -163,6 +163,12 @@ export default function Home() {
             >
               View History
             </Link>
+            <Link
+              href="/dashboard"
+              className="text-gray-400 hover:text-blue-300 text-sm transition-colors"
+            >
+              Dashboard
+            </Link>
             <button
               onClick={() => signOut({ callbackUrl: "/auth/signin" })}
               className="text-gray-500 hover:text-white text-sm transition"

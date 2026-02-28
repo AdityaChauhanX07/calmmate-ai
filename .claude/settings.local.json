@@ -7,7 +7,9 @@
       "Bash(kill 1929:*)",
       "Bash(curl:*)",
       "Bash(python3:*)",
-      "Bash(tasklist:*)"
+      "Bash(tasklist:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }
