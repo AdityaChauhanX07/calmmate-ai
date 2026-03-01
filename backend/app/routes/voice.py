@@ -83,7 +83,8 @@ async def analyze_audio(file_id: str):
 
         # Step 2: Emotion analysis
         try:
-            emotion, confidence = analyze_emotion(transcript)
+            result = analyze_emotion(transcript)
+            emotion, confidence = result["emotion"], result["confidence"]
         except Exception as e:
             logger.error(f"Emotion analysis failed: {e}")
             emotion, confidence = "neutral", 0.0  # graceful fallback
