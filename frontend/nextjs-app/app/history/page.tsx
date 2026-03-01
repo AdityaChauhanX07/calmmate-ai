@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Navbar from "@/components/Navbar";
 
 const EMOTION_EMOJIS: Record<string, string> = {
   joy: "😊",
@@ -51,21 +52,16 @@ export default async function HistoryPage() {
 
   return (
     <main className="relative min-h-screen w-full bg-[#0a0f1f] overflow-hidden">
+      <Navbar />
       {/* Background glow blobs */}
       <div className="absolute inset-0 -z-10 pointer-events-none">
         <div className="absolute w-[600px] h-[600px] bg-purple-600/20 rounded-full blur-[160px] -top-40 -left-20" />
         <div className="absolute w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[150px] bottom-0 right-0" />
       </div>
 
-      <div className="max-w-3xl mx-auto px-6 py-10">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-24 pb-10 animate-fadeIn">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <Link
-            href="/"
-            className="flex items-center gap-1 text-gray-400 hover:text-white text-sm transition-colors"
-          >
-            ← Back
-          </Link>
           <h1 className="text-3xl font-bold text-white">
             Session <span className="text-blue-400">History</span>
           </h1>
@@ -75,17 +71,18 @@ export default async function HistoryPage() {
         </div>
 
         {sessions.length === 0 ? (
-          <div className="backdrop-blur-2xl bg-white/5 border border-white/10 shadow-2xl rounded-3xl p-16 text-center">
-            <p className="text-5xl mb-4">🧘</p>
-            <p className="text-white text-xl font-semibold mb-2">No sessions yet</p>
-            <p className="text-gray-400 text-sm mb-8">
-              Start a conversation and your session history will appear here.
+          <div className="backdrop-blur-2xl bg-white/5 border border-white/10 shadow-2xl rounded-3xl p-12 sm:p-16 text-center">
+            <p className="text-6xl mb-4">🧘</p>
+            <p className="text-white text-xl font-semibold mb-2">Your journey starts here</p>
+            <p className="text-gray-400 text-sm mb-2 max-w-xs mx-auto leading-relaxed">
+              Each conversation you have will be saved here so you can track your emotional patterns over time.
             </p>
+            <p className="text-gray-500 text-xs mb-8">No sessions recorded yet.</p>
             <Link
               href="/"
               className="inline-block px-6 py-3 rounded-xl bg-blue-500/20 border border-blue-400/30 text-blue-300 hover:bg-blue-500/30 transition text-sm"
             >
-              Start your first session
+              Start your first session →
             </Link>
           </div>
         ) : (
@@ -98,7 +95,7 @@ export default async function HistoryPage() {
                   className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-xl"
                 >
                   {/* Card header: emotion + date */}
-                  <div className="flex items-start justify-between mb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-4">
                     <div className="flex items-center gap-3">
                       <span className="text-3xl leading-none" role="img" aria-label={s.emotion}>
                         {emoji}

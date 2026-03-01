@@ -44,7 +44,7 @@ export default function SignIn() {
         <div className="absolute w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[150px] bottom-0 right-0" />
       </div>
 
-      <div className="backdrop-blur-2xl bg-white/5 border border-white/10 shadow-2xl rounded-3xl px-10 py-10 w-full max-w-md">
+      <div className="backdrop-blur-2xl bg-white/5 border border-white/10 shadow-2xl rounded-3xl px-5 sm:px-10 py-8 sm:py-10 w-full max-w-md mx-4 animate-fadeIn">
         <h1 className="text-4xl font-extrabold text-white text-center mb-2">
           Welcome back
         </h1>

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import Recorder from "../components/Recorder";
 import Waveform from "../components/Waveform";
+import Navbar from "../components/Navbar";
 
 type AppState = "idle" | "recording" | "uploading" | "analyzing" | "speaking" | "done" | "error";
 
@@ -44,7 +44,12 @@ export default function Home() {
   if (status === "loading") {
     return (
       <main className="min-h-screen w-full flex items-center justify-center bg-[#0a0f1f]">
-        <div className="text-white text-xl">Loading...</div>
+        <Navbar />
+        <div className="backdrop-blur-2xl bg-white/5 border border-white/10 rounded-3xl px-4 sm:px-12 py-10 max-w-2xl w-full mx-4 animate-pulse">
+          <div className="h-10 bg-white/10 rounded-xl w-48 mb-4" />
+          <div className="h-4 bg-white/10 rounded-xl w-64 mb-8" />
+          <div className="bg-white/10 rounded-2xl h-32 w-full" />
+        </div>
       </main>
     );
   }
@@ -144,43 +149,23 @@ export default function Home() {
   const isProcessing = ["uploading", "analyzing", "speaking"].includes(appState);
 
   return (
-    <main className="relative min-h-screen w-full flex items-center justify-center bg-[#0a0f1f] overflow-hidden">
+    <main className="relative min-h-screen w-full flex items-start justify-center bg-[#0a0f1f] overflow-hidden">
+      <Navbar />
       <div className="absolute inset-0 -z-10">
         <div className="absolute w-[600px] h-[600px] bg-purple-600/20 rounded-full blur-[160px] -top-40 -left-20" />
         <div className="absolute w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[150px] bottom-0 right-0" />
       </div>
 
-      <div className="backdrop-blur-2xl bg-white/5 border border-white/10 shadow-2xl rounded-3xl px-12 py-10 max-w-2xl w-full">
+      <div className="backdrop-blur-2xl bg-white/5 border border-white/10 shadow-2xl rounded-3xl px-4 sm:px-12 py-6 sm:py-10 max-w-2xl w-full mt-20 mx-4 animate-fadeIn">
 
-        <div className="flex justify-between items-center mb-2">
-          <h1 className="text-5xl font-extrabold text-white">
+        <div className="mb-6">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-1">
             CalmMate <span className="text-blue-400">AI</span>
           </h1>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/history"
-              className="text-gray-400 hover:text-blue-300 text-sm transition-colors"
-            >
-              View History
-            </Link>
-            <Link
-              href="/dashboard"
-              className="text-gray-400 hover:text-blue-300 text-sm transition-colors"
-            >
-              Dashboard
-            </Link>
-            <button
-              onClick={() => signOut({ callbackUrl: "/auth/signin" })}
-              className="text-gray-500 hover:text-white text-sm transition"
-            >
-              Sign out
-            </button>
-          </div>
+          <p className="text-gray-400 text-sm">
+            Welcome back, <span className="text-blue-400">{session?.user?.name || session?.user?.email}</span>
+          </p>
         </div>
-
-        <p className="text-gray-400 text-sm mb-1">
-          Welcome back, <span className="text-blue-400">{session?.user?.name || session?.user?.email}</span>
-        </p>
 
         <p className="text-gray-300 text-center mb-8">
           Your personal AI voice companion for emotional clarity.
@@ -209,14 +194,20 @@ export default function Home() {
         )}
 
         {transcript && (
-          <div className="mt-8 bg-white/10 p-6 rounded-xl border border-white/20 text-gray-200">
+          <div
+            className="mt-8 bg-white/10 p-6 rounded-xl border border-white/20 text-gray-200 animate-fadeIn"
+            style={{ animationDelay: "0.1s", opacity: 0, animationFillMode: "both" }}
+          >
             <h2 className="text-xl text-blue-300 mb-2">📝 Transcript</h2>
             <p>{transcript}</p>
           </div>
         )}
 
         {emotion && (
-          <div className="mt-6 bg-white/10 p-6 rounded-xl border border-white/20 text-gray-200">
+          <div
+            className="mt-6 bg-white/10 p-6 rounded-xl border border-white/20 text-gray-200 animate-fadeIn"
+            style={{ animationDelay: "0.2s", opacity: 0, animationFillMode: "both" }}
+          >
             <h2 className="text-xl text-blue-300 mb-2">💬 Emotion Analysis</h2>
             <p>Emotion: <strong className="capitalize">{emotion}</strong></p>
             <p>Confidence: <strong>{(confidence! * 100).toFixed(1)}%</strong></p>
@@ -224,14 +215,20 @@ export default function Home() {
         )}
 
         {aiReply && (
-          <div className="mt-6 bg-white/10 p-6 rounded-xl border border-white/20 text-gray-200">
+          <div
+            className="mt-6 bg-white/10 p-6 rounded-xl border border-white/20 text-gray-200 animate-fadeIn"
+            style={{ animationDelay: "0.3s", opacity: 0, animationFillMode: "both" }}
+          >
             <h2 className="text-xl text-blue-300 mb-2">🧠 AI Therapist</h2>
             <p>{aiReply}</p>
           </div>
         )}
 
         {voiceUrl && (
-          <div className="mt-6 bg-white/10 p-6 rounded-xl border border-white/20">
+          <div
+            className="mt-6 bg-white/10 p-6 rounded-xl border border-white/20 animate-fadeIn"
+            style={{ animationDelay: "0.4s", opacity: 0, animationFillMode: "both" }}
+          >
             <h2 className="text-xl text-blue-300 mb-2">🔊 AI Voice Response</h2>
             <audio controls src={voiceUrl} className="w-full" autoPlay />
           </div>
