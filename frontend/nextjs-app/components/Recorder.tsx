@@ -8,16 +8,22 @@ interface RecorderProps {
   disabled?: boolean;
 }
 
+const RINGS = [
+  { size: 156, opacity: 0.05, delay: '1s',  animClass: 'animate-breathe-3' },
+  { size: 130, opacity: 0.10, delay: '0.5s', animClass: 'animate-breathe-2' },
+  { size: 108, opacity: 0.20, delay: '0s',  animClass: 'animate-breathe-1' },
+];
+
 export default function Recorder({ onAudioReady, onRecordingStateChange, disabled }: RecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<BlobPart[]>([]);  // ✅ useRef instead of useState
+  const chunksRef = useRef<BlobPart[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
 
   const startRecording = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     streamRef.current = stream;
-    chunksRef.current = [];  // ✅ reset chunks
+    chunksRef.current = [];
 
     onRecordingStateChange?.(true, stream);
 
@@ -26,7 +32,7 @@ export default function Recorder({ onAudioReady, onRecordingStateChange, disable
 
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) {
-        chunksRef.current.push(e.data);  // ✅ always up to date
+        chunksRef.current.push(e.data);
       }
     };
 
@@ -34,13 +40,12 @@ export default function Recorder({ onAudioReady, onRecordingStateChange, disable
       const blob = new Blob(chunksRef.current, { type: "audio/webm" });
       onAudioReady(blob);
 
-      // Stop all tracks
       streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
       onRecordingStateChange?.(false, null);
     };
 
-    recorder.start(100);  // ✅ collect data every 100ms
+    recorder.start(100);
     setIsRecording(true);
   };
 
@@ -51,26 +56,65 @@ export default function Recorder({ onAudioReady, onRecordingStateChange, disable
   };
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="relative flex items-center justify-center">
-        {isRecording && (
-          <span className="absolute inset-0 rounded-full bg-red-500/40 animate-ping" />
-        )}
+    <div className="flex flex-col items-center gap-4">
+      <div className="relative flex items-center justify-center" style={{ width: 160, height: 160 }}>
+        {/* Concentric rings */}
+        {RINGS.map(({ size, opacity, delay, animClass }) => (
+          <div
+            key={size}
+            className={`absolute rounded-full ${isRecording ? '' : animClass}`}
+            style={{
+              width: size, height: size,
+              border: `1px solid rgba(126,184,212,${isRecording ? opacity * 2 : opacity})`,
+              animation: isRecording
+                ? `ring-pulse 1.5s ease-in-out ${delay} infinite`
+                : undefined,
+            }}
+          />
+        ))}
+        {/* Main button */}
         <button
           onClick={isRecording ? stopRecording : startRecording}
           disabled={disabled}
-          className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-colors shadow-lg
-            ${isRecording ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"}
-            disabled:opacity-50 disabled:cursor-not-allowed`}
+          className="relative rounded-full flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            width: 88, height: 88,
+            background: isRecording
+              ? 'linear-gradient(145deg, #4a1a1a, #2a0f0f)'
+              : 'linear-gradient(145deg, #1a3a52, #0f2233)',
+            border: `1px solid ${isRecording ? 'rgba(248,113,113,0.4)' : 'rgba(126,184,212,0.3)'}`,
+            boxShadow: isRecording
+              ? '0 0 40px rgba(248,113,113,0.2), 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)'
+              : '0 0 40px rgba(126,184,212,0.12), 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)',
+            transform: 'scale(1)',
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.08)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-8 h-8">
-            <path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4z" />
-            <path d="M19 10a1 1 0 0 0-2 0 5 5 0 0 1-10 0 1 1 0 0 0-2 0 7 7 0 0 0 6 6.93V19H9a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2h-2v-2.07A7 7 0 0 0 19 10z" />
+          {/* Mic SVG — stroke style */}
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+            stroke={isRecording ? '#f87171' : 'var(--accent)'}
+            strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="9" y="2" width="6" height="11" rx="3"/>
+            <path d="M5 10a7 7 0 0 0 14 0"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
           </svg>
         </button>
       </div>
-      <p className="text-gray-400 text-sm">
-        {disabled ? "Processing..." : isRecording ? "Recording..." : "Tap to record"}
+      {/* Status text */}
+      <p className="text-[13px] tracking-[0.04em]" style={{ color: 'var(--muted)' }}>
+        {disabled ? (
+          <span className="flex items-center gap-2">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse-dot" />
+            Processing...
+          </span>
+        ) : isRecording ? (
+          <span className="flex items-center gap-2">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse-dot" />
+            Recording...
+          </span>
+        ) : "Tap to begin"}
       </p>
     </div>
   );
