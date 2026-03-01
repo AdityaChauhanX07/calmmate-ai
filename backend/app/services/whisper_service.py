@@ -8,8 +8,35 @@ UPLOAD_DIR = Path("uploaded_audio")
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 logger = logging.getLogger(__name__)
 
+MIN_DURATION_SECONDS = 1.0
+
+
+def _get_audio_duration(filepath: Path) -> float | None:
+    """Return duration in seconds via ffprobe, or None if it cannot be determined."""
+    try:
+        result = subprocess.run(
+            [
+                "ffprobe", "-v", "quiet",
+                "-show_entries", "format=duration",
+                "-of", "csv=p=0",
+                str(filepath),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        return float(result.stdout.strip())
+    except Exception as e:
+        logger.warning(f"ffprobe duration check failed for {filepath}: {e}")
+        return None
+
+
 def transcribe_audio(filepath: str) -> str:
     webm_path = Path(filepath)
+
+    duration = _get_audio_duration(webm_path)
+    if duration is not None and duration < MIN_DURATION_SECONDS:
+        raise ValueError("Recording too short - please speak for at least 1 second")
 
     # Try sending webm directly first (Groq supports it)
     try:

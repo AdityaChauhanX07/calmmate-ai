@@ -1,10 +1,12 @@
 from dotenv import load_dotenv
 load_dotenv()
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.routes.voice import router as voice_router
+from app.utils.cleanup import cleanup_stale_audio_files
 import logging
 import os
 
@@ -13,7 +15,17 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )
 
-app = FastAPI(title="CalmMate AI Voice Therapist")
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Starting up — running stale audio cleanup...")
+    cleanup_stale_audio_files()
+    yield
+
+
+app = FastAPI(title="CalmMate AI Voice Therapist", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
