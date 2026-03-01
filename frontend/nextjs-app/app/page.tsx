@@ -5,7 +5,8 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Recorder from "../components/Recorder";
 import Waveform from "../components/Waveform";
-import Navbar from "../components/Navbar";
+import Navbar from "@/components/Navbar";
+import AudioPlayer from "@/components/AudioPlayer";
 
 type AppState = "idle" | "recording" | "uploading" | "analyzing" | "speaking" | "done" | "error";
 
@@ -18,6 +19,30 @@ const STATUS_MESSAGES: Record<AppState, string> = {
   done: "Here's what I heard.",
   error: "Something went wrong. Please try again.",
 };
+
+const EMOTION_COLORS: Record<string, string> = {
+  joy: '#4ade80', sadness: '#60a5fa', anger: '#f87171',
+  fear: '#a78bfa', surprise: '#fbbf24', disgust: '#34d399', neutral: '#94a3b8',
+};
+const EMOTION_EMOJI: Record<string, string> = {
+  joy: '😊', sadness: '😢', anger: '😠',
+  fear: '😨', surprise: '😲', disgust: '🤢', neutral: '😐',
+};
+
+function EmotionPill({ emotion }: { emotion: string }) {
+  const color = EMOTION_COLORS[emotion.toLowerCase()] ?? '#94a3b8';
+  const emoji = EMOTION_EMOJI[emotion.toLowerCase()] ?? '•';
+  return (
+    <span className="inline-flex items-center gap-2 text-[14px] font-medium capitalize"
+      style={{
+        padding: '6px 16px', borderRadius: 100,
+        background: `${color}1f`, border: `1px solid ${color}33`,
+        color,
+      }}>
+      {emoji} {emotion}
+    </span>
+  );
+}
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -41,18 +66,17 @@ export default function Home() {
     }
   }, [status, router]);
 
-  if (status === "loading") {
-    return (
-      <main className="min-h-screen w-full flex items-center justify-center bg-[#0a0f1f]">
-        <Navbar />
-        <div className="backdrop-blur-2xl bg-white/5 border border-white/10 rounded-3xl px-4 sm:px-12 py-10 max-w-2xl w-full mx-4 animate-pulse">
-          <div className="h-10 bg-white/10 rounded-xl w-48 mb-4" />
-          <div className="h-4 bg-white/10 rounded-xl w-64 mb-8" />
-          <div className="bg-white/10 rounded-2xl h-32 w-full" />
-        </div>
-      </main>
-    );
-  }
+  if (status === "loading") return (
+    <main className="min-h-screen flex items-center justify-center">
+      <Navbar />
+      <div className="card animate-pulse max-w-xl w-full mx-4" style={{ marginTop: 80 }}>
+        <div className="h-3 rounded w-32 mb-6" style={{ background: 'var(--border)' }} />
+        <div className="h-10 rounded w-3/4 mb-3" style={{ background: 'var(--border)' }} />
+        <div className="h-4 rounded w-1/2 mb-12" style={{ background: 'var(--border)' }} />
+        <div className="h-36 rounded-2xl" style={{ background: 'var(--border)' }} />
+      </div>
+    </main>
+  );
 
   const resetState = () => {
     setTranscript(null);
@@ -113,7 +137,6 @@ export default function Home() {
     setEmotion(data.emotion);
     setConfidence(data.confidence);
     setAiReply(data.reply);
-    // Save session in background — non-blocking, failure is non-fatal
     saveSession({
       transcript: data.transcript,
       emotion: data.emotion,
@@ -141,108 +164,112 @@ export default function Home() {
     setAudioURL(URL.createObjectURL(blob));
     try {
       await uploadAudio(blob);
-    } catch (e: any) {
-      handleError(e.message || "Something went wrong. Please try again.");
+    } catch (e: unknown) {
+      handleError((e as Error).message || "Something went wrong. Please try again.");
     }
   };
 
   const isProcessing = ["uploading", "analyzing", "speaking"].includes(appState);
 
   return (
-    <main className="relative min-h-screen w-full flex items-start justify-center bg-[#0a0f1f] overflow-hidden">
+    <main className="min-h-screen">
       <Navbar />
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute w-[600px] h-[600px] bg-purple-600/20 rounded-full blur-[160px] -top-40 -left-20" />
-        <div className="absolute w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[150px] bottom-0 right-0" />
-      </div>
 
-      <div className="backdrop-blur-2xl bg-white/5 border border-white/10 shadow-2xl rounded-3xl px-4 sm:px-12 py-6 sm:py-10 max-w-2xl w-full mt-20 mx-4 animate-fadeIn">
+      {/* ── Upper section: full-height centered ── */}
+      <div className="flex flex-col items-center justify-center px-4"
+        style={{ minHeight: 'calc(100vh - 64px)' }}>
 
-        <div className="mb-6">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-1">
-            CalmMate <span className="text-blue-400">AI</span>
+        {/* Hero — text-center */}
+        <div className="text-center max-w-2xl w-full animate-fadeIn" style={{ marginBottom: 48 }}>
+          <p className="text-[11px] uppercase tracking-[0.2em] mb-4" style={{ color: 'var(--accent)' }}>
+            Your emotional companion
+          </p>
+          <h1 className="font-fraunces mb-4" style={{ fontSize: 'clamp(40px,6vw,64px)', fontWeight: 300, letterSpacing: '-0.02em', lineHeight: 1.1, color: 'var(--text)' }}>
+            How are you{' '}
+            <em style={{ color: 'var(--accent)', fontStyle: 'italic' }}>feeling</em>{' '}
+            today?
           </h1>
-          <p className="text-gray-400 text-sm">
-            Welcome back, <span className="text-blue-400">{session?.user?.name || session?.user?.email}</span>
+          <p style={{ fontSize: 15, color: 'var(--muted)', lineHeight: 1.7 }}>
+            Speak freely. I&apos;ll listen, understand, and respond with care.
           </p>
         </div>
 
-        <p className="text-gray-300 text-center mb-8">
-          Your personal AI voice companion for emotional clarity.
-        </p>
+        {/* Recorder — standalone, no card wrapper */}
+        <Recorder
+          onAudioReady={handleAudioReady}
+          onRecordingStateChange={(rec, stream) => { setAudioStream(stream); if (rec) resetState(); }}
+          disabled={isProcessing}
+        />
+        <Waveform audioStream={audioStream} isRecording={appState === "recording"} />
 
-        <div className="bg-white/10 p-6 rounded-2xl border border-white/20 shadow-xl flex flex-col items-center">
-          <Recorder
-            onAudioReady={handleAudioReady}
-            onRecordingStateChange={(rec, stream) => {
-              setAudioStream(stream);
-              if (rec) resetState();
-            }}
-            disabled={isProcessing}
-          />
-          <Waveform audioStream={audioStream} isRecording={appState === "recording"} />
-          <p className={`text-sm mt-3 transition-all ${appState === "error" ? "text-red-400" : "text-gray-400"}`}>
-            {isProcessing && (
-              <span className="inline-block w-3 h-3 rounded-full bg-blue-400 animate-pulse mr-2" />
-            )}
+        {/* Status / error inline */}
+        {(isProcessing || appState === "error") && (
+          <p className="text-[13px] mt-4 tracking-[0.04em]" style={{ color: appState === "error" ? '#f87171' : 'var(--muted)' }}>
             {errorMessage || STATUS_MESSAGES[appState]}
           </p>
-        </div>
+        )}
+      </div>
+
+      {/* ── Results section ── */}
+      <div className="max-w-[640px] mx-auto px-4 pb-16">
 
         {audioURL && (
-          <audio controls src={audioURL} className="mt-6 w-full rounded-lg" />
+          <div className="card mb-4 animate-fadeIn" style={{ opacity: 0, animationFillMode: 'both' }}>
+            <p className="text-[11px] uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--muted)' }}>Your recording</p>
+            <AudioPlayer src={audioURL} />
+          </div>
         )}
 
         {transcript && (
-          <div
-            className="mt-8 bg-white/10 p-6 rounded-xl border border-white/20 text-gray-200 animate-fadeIn"
-            style={{ animationDelay: "0.1s", opacity: 0, animationFillMode: "both" }}
-          >
-            <h2 className="text-xl text-blue-300 mb-2">📝 Transcript</h2>
-            <p>{transcript}</p>
+          <div className="card mb-4 animate-fadeIn" style={{ animationDelay: '0.1s', opacity: 0, animationFillMode: 'both' }}>
+            <p className="text-[11px] uppercase tracking-[0.15em] mb-3" style={{ color: 'var(--muted)' }}>Transcript</p>
+            <p style={{ color: 'var(--text)', lineHeight: 1.7 }}>{transcript}</p>
           </div>
         )}
 
         {emotion && (
-          <div
-            className="mt-6 bg-white/10 p-6 rounded-xl border border-white/20 text-gray-200 animate-fadeIn"
-            style={{ animationDelay: "0.2s", opacity: 0, animationFillMode: "both" }}
-          >
-            <h2 className="text-xl text-blue-300 mb-2">💬 Emotion Analysis</h2>
-            <p>Emotion: <strong className="capitalize">{emotion}</strong></p>
-            <p>Confidence: <strong>{(confidence! * 100).toFixed(1)}%</strong></p>
+          <div className="card mb-4 animate-fadeIn" style={{ animationDelay: '0.2s', opacity: 0, animationFillMode: 'both' }}>
+            <p className="text-[11px] uppercase tracking-[0.15em] mb-3" style={{ color: 'var(--muted)' }}>Emotion detected</p>
+            <EmotionPill emotion={emotion} />
+            <div className="mt-4">
+              <div className="flex justify-between text-[12px] mb-1" style={{ color: 'var(--muted)' }}>
+                <span>Confidence</span>
+                <span>{(confidence! * 100).toFixed(1)}%</span>
+              </div>
+              <div className="rounded-full overflow-hidden" style={{ height: 3, background: 'rgba(255,255,255,0.06)' }}>
+                <div className="h-full rounded-full transition-all duration-1000"
+                  style={{ width: `${(confidence! * 100).toFixed(1)}%`, background: 'linear-gradient(90deg, var(--accent), #4a9ab8)' }} />
+              </div>
+            </div>
           </div>
         )}
 
         {aiReply && (
-          <div
-            className="mt-6 bg-white/10 p-6 rounded-xl border border-white/20 text-gray-200 animate-fadeIn"
-            style={{ animationDelay: "0.3s", opacity: 0, animationFillMode: "both" }}
-          >
-            <h2 className="text-xl text-blue-300 mb-2">🧠 AI Therapist</h2>
-            <p>{aiReply}</p>
+          <div className="card mb-4 animate-fadeIn"
+            style={{ animationDelay: '0.3s', opacity: 0, animationFillMode: 'both', borderColor: 'rgba(126,184,212,0.15)' }}>
+            <p className="text-[11px] uppercase tracking-[0.15em] mb-3" style={{ color: 'var(--accent)', opacity: 0.7 }}>CalmMate</p>
+            <p style={{ color: 'var(--text)', lineHeight: 1.7 }}>{aiReply}</p>
           </div>
         )}
 
         {voiceUrl && (
-          <div
-            className="mt-6 bg-white/10 p-6 rounded-xl border border-white/20 animate-fadeIn"
-            style={{ animationDelay: "0.4s", opacity: 0, animationFillMode: "both" }}
-          >
-            <h2 className="text-xl text-blue-300 mb-2">🔊 AI Voice Response</h2>
-            <audio controls src={voiceUrl} className="w-full" autoPlay />
+          <div className="card mb-4 animate-fadeIn" style={{ animationDelay: '0.4s', opacity: 0, animationFillMode: 'both' }}>
+            <p className="text-[11px] uppercase tracking-[0.15em] mb-4" style={{ color: 'var(--muted)' }}>AI Voice Response</p>
+            <AudioPlayer src={voiceUrl} autoPlay />
           </div>
         )}
 
         {(appState === "done" || appState === "error") && (
           <button
             onClick={resetState}
-            className="mt-6 w-full py-3 rounded-xl border border-white/20 text-gray-300 hover:bg-white/10 transition text-sm"
+            className="w-full py-3 text-[13px] tracking-[0.04em] transition-colors mt-2"
+            style={{ border: '1px solid var(--border)', borderRadius: 100, color: 'var(--muted)', background: 'none', cursor: 'pointer' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--accent)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--muted)'; }}
           >
             Start a new session
           </button>
         )}
-
       </div>
     </main>
   );

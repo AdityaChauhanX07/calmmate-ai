@@ -5,6 +5,16 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 
+const EMOTION_COLORS: Record<string, string> = {
+  joy: "#4ade80",
+  sadness: "#60a5fa",
+  anger: "#f87171",
+  fear: "#a78bfa",
+  surprise: "#fbbf24",
+  disgust: "#34d399",
+  neutral: "#94a3b8",
+};
+
 const EMOTION_EMOJIS: Record<string, string> = {
   joy: "😊",
   sadness: "😢",
@@ -14,6 +24,41 @@ const EMOTION_EMOJIS: Record<string, string> = {
   disgust: "🤢",
   neutral: "😐",
 };
+
+function EmotionPill({
+  emotion,
+  confidence,
+}: {
+  emotion: string;
+  confidence: number;
+}) {
+  const key = emotion.toLowerCase();
+  const color = EMOTION_COLORS[key] ?? "#94a3b8";
+  const emoji = EMOTION_EMOJIS[key] ?? "•";
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        padding: "6px 14px",
+        borderRadius: 100,
+        fontSize: 13,
+        background: `${color}1f`,
+        border: `1px solid ${color}33`,
+        color,
+        fontWeight: 500,
+        whiteSpace: "nowrap",
+      }}
+    >
+      <span>{emoji}</span>
+      <span style={{ textTransform: "capitalize" }}>{emotion}</span>
+      <span style={{ opacity: 0.6, fontSize: 11 }}>
+        · {(confidence * 100).toFixed(0)}%
+      </span>
+    </span>
+  );
+}
 
 function formatDate(date: Date): string {
   return new Date(date).toLocaleDateString("en-US", {
@@ -51,90 +96,125 @@ export default async function HistoryPage() {
   });
 
   return (
-    <main className="relative min-h-screen w-full bg-[#0a0f1f] overflow-hidden">
+    <main className="min-h-screen">
       <Navbar />
-      {/* Background glow blobs */}
-      <div className="absolute inset-0 -z-10 pointer-events-none">
-        <div className="absolute w-[600px] h-[600px] bg-purple-600/20 rounded-full blur-[160px] -top-40 -left-20" />
-        <div className="absolute w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[150px] bottom-0 right-0" />
-      </div>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-24 pb-16">
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-24 pb-10 animate-fadeIn">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <h1 className="text-3xl font-bold text-white">
-            Session <span className="text-blue-400">History</span>
+        {/* Page header */}
+        <div className="mb-10 animate-fadeIn">
+          <h1
+            className="font-fraunces mb-2"
+            style={{ fontSize: 40, fontWeight: 300, color: "var(--text)" }}
+          >
+            Session{" "}
+            <em style={{ color: "var(--accent)", fontStyle: "italic" }}>
+              History
+            </em>
           </h1>
-          <span className="ml-auto text-gray-500 text-sm">
-            {sessions.length} {sessions.length === 1 ? "session" : "sessions"}
-          </span>
+          <p style={{ color: "var(--muted)", fontSize: 14 }}>
+            Your emotional journey over time
+          </p>
         </div>
 
         {sessions.length === 0 ? (
-          <div className="backdrop-blur-2xl bg-white/5 border border-white/10 shadow-2xl rounded-3xl p-12 sm:p-16 text-center">
-            <p className="text-6xl mb-4">🧘</p>
-            <p className="text-white text-xl font-semibold mb-2">Your journey starts here</p>
-            <p className="text-gray-400 text-sm mb-2 max-w-xs mx-auto leading-relaxed">
-              Each conversation you have will be saved here so you can track your emotional patterns over time.
+          <div className="card text-center py-16 animate-fadeIn">
+            <p className="text-5xl mb-4">🧘</p>
+            <p
+              className="font-fraunces text-[22px] mb-2"
+              style={{ color: "var(--text)", fontWeight: 300 }}
+            >
+              Your journey starts here
             </p>
-            <p className="text-gray-500 text-xs mb-8">No sessions recorded yet.</p>
+            <p
+              className="text-[14px] mb-2 max-w-xs mx-auto"
+              style={{ color: "var(--muted)", lineHeight: 1.6 }}
+            >
+              Each conversation will be saved here so you can track your
+              emotional patterns over time.
+            </p>
+            <p
+              className="text-[12px] mb-8"
+              style={{ color: "var(--muted)", opacity: 0.5 }}
+            >
+              No sessions recorded yet.
+            </p>
             <Link
               href="/"
-              className="inline-block px-6 py-3 rounded-xl bg-blue-500/20 border border-blue-400/30 text-blue-300 hover:bg-blue-500/30 transition text-sm"
+              className="inline-block text-[13px] transition-colors"
+              style={{
+                padding: "10px 24px",
+                borderRadius: 100,
+                border: "1px solid rgba(126,184,212,0.3)",
+                color: "var(--accent)",
+                textDecoration: "none",
+              }}
             >
               Start your first session →
             </Link>
           </div>
         ) : (
           <div className="space-y-4">
-            {sessions.map((s) => {
-              const emoji = EMOTION_EMOJIS[s.emotion.toLowerCase()] ?? "😐";
-              return (
-                <article
-                  key={s.id}
-                  className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-xl"
+            {sessions.map((s, i) => (
+              <article
+                key={s.id}
+                className="card animate-fadeIn"
+                style={{
+                  animationDelay: `${i * 0.05}s`,
+                  opacity: 0,
+                  animationFillMode: "both",
+                }}
+              >
+                {/* Top row: emotion pill + date */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                  <EmotionPill
+                    emotion={s.emotion}
+                    confidence={s.confidence}
+                  />
+                  <div className="text-right">
+                    <p
+                      className="text-[11px] uppercase tracking-[0.08em]"
+                      style={{ color: "var(--muted)" }}
+                    >
+                      {formatDate(s.createdAt)}
+                    </p>
+                    <p
+                      className="text-[11px]"
+                      style={{ color: "var(--muted)", opacity: 0.6 }}
+                    >
+                      {formatTime(s.createdAt)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Transcript */}
+                <p
+                  className="text-[14px] italic mb-4 line-clamp-3"
+                  style={{ color: "var(--muted)", lineHeight: 1.6 }}
                 >
-                  {/* Card header: emotion + date */}
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-4">
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl leading-none" role="img" aria-label={s.emotion}>
-                        {emoji}
-                      </span>
-                      <div>
-                        <p className="text-white font-semibold capitalize">{s.emotion}</p>
-                        <p className="text-gray-500 text-xs mt-0.5">
-                          {(s.confidence * 100).toFixed(1)}% confidence
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-gray-400 text-xs">{formatDate(s.createdAt)}</p>
-                      <p className="text-gray-500 text-xs mt-0.5">{formatTime(s.createdAt)}</p>
-                    </div>
-                  </div>
+                  &ldquo;{s.transcript}&rdquo;
+                </p>
 
-                  {/* Transcript */}
-                  <div className="mb-4">
-                    <p className="text-gray-500 text-xs uppercase tracking-wider mb-1.5">
-                      📝 Transcript
-                    </p>
-                    <p className="text-gray-300 text-sm leading-relaxed line-clamp-3">
-                      {s.transcript}
-                    </p>
-                  </div>
+                {/* Divider */}
+                <div
+                  className="mb-4"
+                  style={{ height: 1, background: "var(--border)" }}
+                />
 
-                  {/* AI Reply */}
-                  <div className="border-t border-white/10 pt-4">
-                    <p className="text-gray-500 text-xs uppercase tracking-wider mb-1.5">
-                      🧠 AI Therapist
-                    </p>
-                    <p className="text-gray-300 text-sm leading-relaxed line-clamp-4">
-                      {s.reply}
-                    </p>
-                  </div>
-                </article>
-              );
-            })}
+                {/* AI Reply */}
+                <p
+                  className="text-[10px] uppercase tracking-[0.15em] mb-2"
+                  style={{ color: "var(--accent)", opacity: 0.7 }}
+                >
+                  CalmMate responded
+                </p>
+                <p
+                  className="text-[14px] line-clamp-4"
+                  style={{ color: "var(--text)", lineHeight: 1.6 }}
+                >
+                  {s.reply}
+                </p>
+              </article>
+            ))}
           </div>
         )}
       </div>
