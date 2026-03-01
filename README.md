@@ -2,6 +2,8 @@
 
 A voice-based mental wellness app I built to experiment with combining several AI APIs into something actually useful. You speak, it listens, figures out how you're feeling, and responds like a therapist with voice.
 
+**Live at: https://calmmate-ai.vercel.app**
+
 ## What it does
 
 Record yourself talking about whatever's on your mind. The app transcribes it, detects your emotional state, generates a therapist-style response, and reads it back to you. It also tracks your emotional patterns over time so you can see trends.
@@ -10,7 +12,7 @@ Record yourself talking about whatever's on your mind. The app transcribes it, d
 
 **Frontend:** Next.js 14, TypeScript, Tailwind CSS, NextAuth.js  
 **Backend:** Python, FastAPI  
-**AI/ML:** Groq Whisper (transcription), DistilRoBERTa (emotion detection), LLaMA 3.3 70B via Groq (therapist responses), ElevenLabs (text-to-speech)  
+**AI/ML:** Groq Whisper (transcription), LLaMA 3.3 70B via Groq (emotion detection + therapist responses), ElevenLabs (text-to-speech)  
 **Database:** PostgreSQL via Supabase, Prisma ORM
 
 ## Getting it running locally
@@ -70,7 +72,7 @@ Open `http://localhost:3000`.
 2. Audio blob uploaded to FastAPI backend
 3. ffmpeg converts webm to wav
 4. Groq Whisper transcribes the audio
-5. DistilRoBERTa classifies emotion from the transcript
+5. LLaMA 3.3 70B classifies emotion from the transcript
 6. LLaMA 3.3 70B generates a therapist response
 7. ElevenLabs converts the response to speech
 8. Frontend plays the audio back and saves the session to the database
