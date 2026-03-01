@@ -16,6 +16,19 @@ logger = logging.getLogger(__name__)
 UPLOAD_FOLDER = "uploaded_audio"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+MAX_UPLOAD_BYTES = 25 * 1024 * 1024  # 25MB
+
+
+def _delete_audio_files(file_id: str) -> None:
+    for ext in (".webm", ".wav"):
+        path = os.path.join(UPLOAD_FOLDER, f"{file_id}{ext}")
+        try:
+            if os.path.exists(path):
+                os.remove(path)
+                logger.info(f"Deleted audio file: {path}")
+        except OSError as e:
+            logger.warning(f"Failed to delete {path}: {e}")
+
 
 class SpeakRequest(BaseModel):
     text: str
@@ -27,11 +40,15 @@ async def upload_audio(file: UploadFile = File(...)):
         if not file.filename.endswith((".webm", ".wav", ".mp3", ".ogg")):
             raise HTTPException(status_code=400, detail="Unsupported audio format")
 
+        content = await file.read()
+        if len(content) > MAX_UPLOAD_BYTES:
+            raise HTTPException(status_code=413, detail="File too large — maximum upload size is 25MB")
+
         file_id = str(uuid.uuid4())
         filepath = os.path.join(UPLOAD_FOLDER, f"{file_id}.webm")
 
         with open(filepath, "wb") as f:
-            f.write(await file.read())
+            f.write(content)
 
         logger.info(f"Audio uploaded: {file_id}")
         return {"status": "success", "file_id": file_id}
@@ -54,6 +71,9 @@ async def analyze_audio(file_id: str):
         # Step 1: Transcribe
         try:
             transcript = transcribe_audio(filepath)
+        except ValueError as e:
+            _delete_audio_files(file_id)
+            raise HTTPException(status_code=422, detail=str(e))
         except Exception as e:
             logger.error(f"Transcription failed: {e}")
             raise HTTPException(status_code=500, detail="Transcription failed")
@@ -75,6 +95,7 @@ async def analyze_audio(file_id: str):
             logger.error(f"Therapist reply failed: {e}")
             raise HTTPException(status_code=500, detail="Failed to generate therapist response")
 
+        _delete_audio_files(file_id)
         return {
             "transcript": transcript,
             "emotion": emotion,
