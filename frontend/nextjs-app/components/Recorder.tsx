@@ -51,14 +51,27 @@ export default function Recorder({ onAudioReady, onRecordingStateChange, disable
   };
 
   return (
-    <button
-      onClick={isRecording ? stopRecording : startRecording}
-      disabled={disabled}
-      className={`px-6 py-3 rounded-lg font-semibold text-white transition ${
-        isRecording ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"
-      } disabled:opacity-50 disabled:cursor-not-allowed`}
-    >
-      {isRecording ? "Stop Recording" : "Start Recording"}
-    </button>
+    <div className="flex flex-col items-center gap-3">
+      <div className="relative flex items-center justify-center">
+        {isRecording && (
+          <span className="absolute inset-0 rounded-full bg-red-500/40 animate-ping" />
+        )}
+        <button
+          onClick={isRecording ? stopRecording : startRecording}
+          disabled={disabled}
+          className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-colors shadow-lg
+            ${isRecording ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"}
+            disabled:opacity-50 disabled:cursor-not-allowed`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-8 h-8">
+            <path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4z" />
+            <path d="M19 10a1 1 0 0 0-2 0 5 5 0 0 1-10 0 1 1 0 0 0-2 0 7 7 0 0 0 6 6.93V19H9a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2h-2v-2.07A7 7 0 0 0 19 10z" />
+          </svg>
+        </button>
+      </div>
+      <p className="text-gray-400 text-sm">
+        {disabled ? "Processing..." : isRecording ? "Recording..." : "Tap to record"}
+      </p>
+    </div>
   );
 }

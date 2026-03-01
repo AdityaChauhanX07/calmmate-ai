@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Navbar from "@/components/Navbar";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell, LineChart, Line,
@@ -114,18 +115,16 @@ export default function DashboardPage() {
 
   return (
     <main className="relative min-h-screen bg-[#0a0f1f] overflow-hidden">
+      <Navbar />
       {/* Background glow blobs */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute w-[600px] h-[600px] bg-purple-600/20 rounded-full blur-[160px] -top-40 -left-20" />
         <div className="absolute w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[150px] bottom-0 right-0" />
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-10">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-24 pb-10">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Link href="/" className="text-gray-400 hover:text-blue-300 text-sm transition-colors">
-            ← Back
-          </Link>
+        <div className="mb-8">
           <h1 className="text-3xl font-extrabold text-white">
             Emotion <span className="text-blue-400">Dashboard</span>
           </h1>
@@ -155,22 +154,25 @@ export default function DashboardPage() {
 
         {/* Empty state */}
         {!loading && !error && data && data.totalSessions === 0 && (
-          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-12 text-center">
-            <p className="text-5xl mb-4">📊</p>
-            <p className="text-white text-xl font-semibold mb-2">No sessions yet</p>
-            <p className="text-gray-400 mb-6">Complete a voice session to see your emotion trends here.</p>
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-12 text-center animate-fadeIn">
+            <p className="text-6xl mb-4">📊</p>
+            <p className="text-white text-xl font-semibold mb-2">No data yet</p>
+            <p className="text-gray-400 text-sm mb-2 max-w-xs mx-auto leading-relaxed">
+              Your emotion trends, confidence scores, and session streaks will appear here once you start recording.
+            </p>
+            <p className="text-gray-500 text-xs mb-8">Charts unlock after your first session.</p>
             <Link
               href="/"
               className="inline-block px-6 py-3 rounded-xl bg-blue-500/20 border border-blue-400/30 text-blue-300 hover:bg-blue-500/30 transition text-sm"
             >
-              Start a session
+              Record your first session →
             </Link>
           </div>
         )}
 
         {/* Data state */}
         {!loading && !error && data && data.totalSessions > 0 && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-fadeIn">
             {/* Stats row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <StatCard icon="🎙️" label="Total Sessions" value={data.totalSessions} />
@@ -195,9 +197,11 @@ export default function DashboardPage() {
             </div>
 
             {/* Bar Chart — Emotion Distribution */}
-            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-6">
               <h2 className="text-white font-semibold text-lg mb-4">Emotion Distribution</h2>
               {mounted ? (
+                <div className="overflow-x-auto">
+                  <div style={{ minWidth: "320px" }}>
                 <ResponsiveContainer
                   width="100%"
                   height={Math.max(180, data.emotionCounts.length * 52)}
@@ -241,6 +245,8 @@ export default function DashboardPage() {
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
+                  </div>
+                </div>
               ) : (
                 <div
                   className="animate-pulse bg-white/5 rounded-xl"
@@ -250,12 +256,14 @@ export default function DashboardPage() {
             </div>
 
             {/* Line Chart — Confidence Over Time */}
-            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-6">
               <h2 className="text-white font-semibold text-lg mb-4">
                 Confidence Over Time{" "}
                 <span className="text-gray-500 text-sm font-normal">(last 14 days)</span>
               </h2>
               {mounted ? (
+                <div className="overflow-x-auto">
+                  <div style={{ minWidth: "320px" }}>
                 <ResponsiveContainer width="100%" height={220}>
                   <LineChart
                     data={data.emotionOverTime}
@@ -302,6 +310,8 @@ export default function DashboardPage() {
                     />
                   </LineChart>
                 </ResponsiveContainer>
+                  </div>
+                </div>
               ) : (
                 <div className="animate-pulse bg-white/5 rounded-xl" style={{ height: 220 }} />
               )}
